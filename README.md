@@ -1,4 +1,3 @@
-# Sistema-Gestion-Gimnasios
 # Sistema de Gestión de Gimnasios
 
 Aplicación web desarrollada con **Python y Django**, orientada a la administración y control de las operaciones de un gimnasio. El sistema centraliza la gestión de socios, planes, membresías, pagos y accesos, incorporando mecanismos de autenticación, autorización y validación mediante códigos QR dinámicos.
