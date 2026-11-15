@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Control - GymAccess{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h3 class="fw-bold text-dark mb-1">
+            {% if es_admin %}
+                Panel de Administración General
+            {% elif es_recepcion %}
+                Panel de Recepción y Control
+            {% elif es_socio %}
+                Mi Portal de Socio
+            {% else %}
+                Panel de Usuario
+            {% endif %}
+        </h3>
+        <p class="text-secondary small mb-0">
+            Bienvenido/a, <strong>{{ user.get_full_name|default:user.username }}</strong> &bull; Fecha: {{ hoy|date:"d/m/Y" }}
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+        {% if es_recepcion %}
+        <a href="{% url 'accesos:validar' %}" class="btn btn-primary btn-sm shadow-sm">
+            <i class="bi bi-qr-code-scan me-1"></i> Validar Acceso QR
+        </a>
+        {% endif %}
+        {% if es_socio %}
+        <a href="{% url 'panel:carnet_propio' %}" class="btn btn-primary btn-sm shadow-sm">
+            <i class="bi bi-qr-code me-1"></i> Ver Mi Carnet Digital
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if es_admin %}
+<!-- ==================== DASHBOARD ADMINISTRADOR ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-secondary small fw-medium">Total de Socios</span>
+                    <h3 class="fw-bold my-1 text-dark">{{ total_socios }}</h3>
+                    <span class="badge bg-light text-secondary border">Registrados</span>
+                </div>
+                <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-3">
+                    <i class="bi bi-people fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-secondary small fw-medium">Membresías Activas</span>
+                    <h3 class="fw-bold my-1 text-success">{{ membresias_activas }}</h3>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">Vigentes</span>
+                </div>
+                <div class="p-2 bg-success bg-opacity-10 text-success rounded-3">
+                    <i class="bi bi-check-circle fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-secondary small fw-medium">Accesos Hoy</span>
+                    <h3 class="fw-bold my-1 text-dark">{{ accesos_hoy }}</h3>
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">{{ accesos_permitidos_hoy }} permitidos</span>
+                </div>
+                <div class="p-2 bg-info bg-opacity-10 text-info-emphasis rounded-3">
+                    <i class="bi bi-door-open fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="text-secondary small fw-medium">Ingresos del Mes</span>
+                    <h3 class="fw-bold my-1 text-dark">${{ ingresos_mes|floatformat:2 }}</h3>
+                    <span class="badge bg-light text-secondary border">{{ planes_activos }} planes activos</span>
+                </div>
+                <div class="p-2 bg-warning bg-opacity-10 text-warning-emphasis rounded-3">
+                    <i class="bi bi-currency-dollar fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones Rápidas Administrador -->
+<div class="card card-custom p-3 mb-4">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="fw-semibold small text-secondary me-2"><i class="bi bi-lightning-charge me-1"></i>Acciones Rápidas:</span>
+        <a href="{% url 'accesos:validar' %}" class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-qr-code-scan me-1"></i> Validar Entrada
+        </a>
+        <a href="{% url 'cuentas:crear_socio' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i> Registrar Socio
+        </a>
+        <a href="{% url 'membresias:asignar_membresia' %}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-card-plus me-1"></i> Asignar / Renovar Membresía
+        </a>
+        <a href="{% url 'membresias:crear_plan' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i> Nuevo Plan
+        </a>
+        <a href="{% url 'membresias:registrar_pago' %}" class="btn btn-outline-warning btn-sm text-dark">
+            <i class="bi bi-cash me-1"></i> Registrar Pago
+        </a>
+    </div>
+</div>
+
+<!-- Tablas de Actividad Reciente -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2"></i>Últimos Accesos Registrados</h6>
+                <a href="{% url 'accesos:historial' %}" class="btn btn-link btn-sm text-decoration-none p-0">Ver todos</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Socio</th>
+                            <th>Hora</th>
+                            <th>Puerta</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for acceso in ultimos_accesos %}
+                        <tr>
+                            <td class="ps-3 fw-medium">
+                                {% if acceso.socio %}
+                                    <a href="{% url 'cuentas:detalle_socio' acceso.socio.id %}" class="text-decoration-none text-dark">
+                                        {{ acceso.socio.nombre_completo }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Desconocido</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary small">{{ acceso.fecha_hora|date:"H:i:s" }}</td>
+                            <td><span class="badge bg-light text-secondary border">{{ acceso.puerta }}</span></td>
+                            <td>
+                                {% if "PERMITIDO" in acceso.resultado %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Permitido</span>
+                                {% elif "QR_EXPIRADO" in acceso.resultado %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">QR Expirado</span>
+                                {% elif "MEMBRESIA_VENCIDA" in acceso.resultado %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Vencida</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Denegado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted small">No hay accesos registrados hoy.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-cash-stack me-2"></i>Últimos Pagos Registrados</h6>
+                <a href="{% url 'membresias:lista_pagos' %}" class="btn btn-link btn-sm text-decoration-none p-0">Ver todos</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Comprobante</th>
+                            <th>Socio</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in ultimos_pagos %}
+                        <tr>
+                            <td class="ps-3">
+                                <a href="{% url 'membresias:comprobante_pago' pago.id %}" class="text-decoration-none fw-semibold font-monospace small">
+                                    {{ pago.numero_comprobante }}
+                                </a>
+                            </td>
+                            <td class="small">{{ pago.membresia.socio.nombre_completo|truncatechars:18 }}</td>
+                            <td class="fw-bold text-success small">${{ pago.monto }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-muted small">No hay pagos recientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif es_recepcion %}
+<!-- ==================== DASHBOARD RECEPCIÓN ==================== -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <span class="text-secondary small fw-medium">Validaciones Hoy</span>
+            <h3 class="fw-bold my-1 text-primary">{{ accesos_hoy }}</h3>
+            <span class="text-muted small">Entradas procesadas</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <span class="text-secondary small fw-medium">Membresías Vigentes</span>
+            <h3 class="fw-bold my-1 text-success">{{ membresias_activas }}</h3>
+            <span class="text-muted small">Socios habilitados para ingresar</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card metric-card p-3 shadow-sm h-100">
+            <span class="text-secondary small fw-medium">Socios Registrados</span>
+            <h3 class="fw-bold my-1 text-dark">{{ total_socios }}</h3>
+            <span class="text-muted small">Base de datos de socios</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card card-custom p-4 text-center">
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex mx-auto mb-3">
+                <i class="bi bi-qr-code-scan fs-1"></i>
+            </div>
+            <h5 class="fw-bold">Punto de Control de Accesos</h5>
+            <p class="text-secondary small mb-3">
+                Valida códigos QR dinámicos de los socios en puerta principal o torniquetes.
+            </p>
+            <a href="{% url 'accesos:validar' %}" class="btn btn-primary py-2 fw-semibold shadow-sm">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Abrir Terminal de Validación
+            </a>
+            <hr class="my-3">
+            <div class="d-grid gap-2">
+                <a href="{% url 'cuentas:crear_socio' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i> Registrar Nuevo Socio
+                </a>
+                <a href="{% url 'membresias:asignar_membresia' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-card-checklist me-1"></i> Asignar / Renovar Membresía
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2"></i>Últimas Entradas Registradas</h6>
+                <a href="{% url 'accesos:historial' %}" class="btn btn-link btn-sm text-decoration-none p-0">Ver Historial</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Socio</th>
+                            <th>Hora</th>
+                            <th>Puerta</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for acceso in ultimos_accesos %}
+                        <tr>
+                            <td class="ps-3 fw-medium">
+                                {% if acceso.socio %}
+                                    {{ acceso.socio.nombre_completo }}
+                                {% else %}
+                                    <span class="text-muted">Desconocido</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary small">{{ acceso.fecha_hora|date:"H:i:s" }}</td>
+                            <td><span class="badge bg-light text-secondary border">{{ acceso.puerta }}</span></td>
+                            <td>
+                                {% if "PERMITIDO" in acceso.resultado %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Permitido</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Denegado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted small">No hay accesos recientes hoy.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif es_socio %}
+<!-- ==================== DASHBOARD SOCIO ==================== -->
+<div class="row g-4">
+    <!-- Ficha del Socio y Carnet QR Dinámico -->
+    <div class="col-lg-5">
+        <div class="card card-custom text-center p-4">
+            <div class="mb-3">
+                {% if socio.foto %}
+                    <img src="{{ socio.foto.url }}" alt="{{ socio.nombre_completo }}" class="rounded-circle border p-1" style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                        <i class="bi bi-person-circle fs-1"></i>
+                    </div>
+                {% endif %}
+            </div>
+
+            <h5 class="fw-bold mb-1">{{ socio.nombre_completo }}</h5>
+            <p class="text-secondary small mb-3">Doc: <strong>{{ socio.documento_identidad }}</strong> &bull; Tel: {{ socio.telefono|default:"No registrado" }}</p>
+
+            <!-- Estado de Membresía -->
+            <div class="p-3 rounded-3 mb-3 {% if membresia_actual and membresia_actual.esta_vigente %}bg-success-subtle border border-success-subtle text-success{% else %}bg-danger-subtle border border-danger-subtle text-danger{% endif %}">
+                {% if membresia_actual and membresia_actual.esta_vigente %}
+                    <div class="fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Membresía Vigente</div>
+                    <div class="small mt-1 text-dark">Plan: <strong>{{ membresia_actual.plan.nombre }}</strong></div>
+                    <div class="small text-secondary">Vence el {{ membresia_actual.fecha_fin|date:"d/m/Y" }} ({{ dias_restantes }} días restantes)</div>
+                {% else %}
+                    <div class="fw-semibold"><i class="bi bi-x-circle-fill me-1"></i> Sin Membresía Activa</div>
+                    <div class="small mt-1 text-secondary">Acércate a recepción para renovar tu suscripción.</div>
+                {% endif %}
+            </div>
+
+            <!-- Botón hacia el carnet digital a pantalla completa -->
+            <a href="{% url 'panel:carnet_propio' %}" class="btn btn-primary w-100 py-2 shadow-sm">
+                <i class="bi bi-qr-code me-1"></i> Abrir Mi Carnet Digital Dinámico
+            </a>
+        </div>
+    </div>
+
+    <!-- Historial del Socio -->
+    <div class="col-lg-7">
+        <!-- Mis Pagos -->
+        <div class="card card-custom mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-receipt me-2"></i>Mis Últimos Pagos</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Comprobante</th>
+                            <th>Plan</th>
+                            <th>Monto</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in mis_pagos %}
+                        <tr>
+                            <td class="ps-3">
+                                <a href="{% url 'membresias:comprobante_pago' pago.id %}" class="font-monospace small text-decoration-none">
+                                    {{ pago.numero_comprobante }}
+                                </a>
+                            </td>
+                            <td class="small">{{ pago.membresia.plan.nombre }}</td>
+                            <td class="fw-semibold text-dark small">${{ pago.monto }}</td>
+                            <td class="text-secondary small">{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-3 text-muted small">No hay pagos registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mis Accesos Recientes -->
+        <div class="card card-custom">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2"></i>Mis Accesos Recientes</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Fecha y Hora</th>
+                            <th>Puerta</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for acceso in mis_accesos %}
+                        <tr>
+                            <td class="ps-3 small text-secondary">{{ acceso.fecha_hora|date:"d/m/Y H:i:s" }}</td>
+                            <td class="small">{{ acceso.puerta }}</td>
+                            <td>
+                                {% if "PERMITIDO" in acceso.resultado %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Permitido</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Denegado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-3 text-muted small">No hay ingresos registrados aún.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    Tu cuenta no tiene asignado un rol específico en el sistema. Contacta al administrador.
+</div>
+{% endif %}
+
+{% endblock %}

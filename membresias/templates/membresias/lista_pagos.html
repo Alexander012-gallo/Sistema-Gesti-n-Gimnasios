@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Historial y Registro de Pagos - GymAccess{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Registro de Pagos</h4>
+        <p class="text-secondary small mb-0">Control de ingresos, cobros de membresías y comprobantes emitidos.</p>
+    </div>
+    <a href="{% url 'membresias:registrar_pago' %}" class="btn btn-primary btn-sm shadow-sm">
+        <i class="bi bi-cash me-1"></i> Registrar Nuevo Pago
+    </a>
+</div>
+
+<!-- Buscador -->
+<div class="card card-custom p-3 mb-4">
+    <form method="get" class="row g-2">
+        <div class="col-md-10">
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Buscar por número de comprobante, nombre o documento del socio...">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Buscar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de Pagos -->
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Comprobante</th>
+                    <th>Socio</th>
+                    <th>Plan</th>
+                    <th>Monto</th>
+                    <th>Método</th>
+                    <th>Fecha y Hora</th>
+                    <th>Registrado Por</th>
+                    <th class="text-end pe-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos %}
+                <tr>
+                    <td class="ps-3">
+                        <a href="{% url 'membresias:comprobante_pago' pago.id %}" class="fw-semibold font-monospace small text-decoration-none">
+                            {{ pago.numero_comprobante }}
+                        </a>
+                    </td>
+                    <td class="fw-medium small">
+                        <a href="{% url 'cuentas:detalle_socio' pago.membresia.socio.id %}" class="text-decoration-none text-dark">
+                            {{ pago.membresia.socio.nombre_completo }}
+                        </a>
+                    </td>
+                    <td class="small">{{ pago.membresia.plan.nombre }}</td>
+                    <td class="fw-bold text-success">${{ pago.monto }}</td>
+                    <td><span class="badge bg-light text-secondary border">{{ pago.get_metodo_display }}</span></td>
+                    <td class="small text-secondary">{{ pago.fecha_pago|date:"d/m/Y H:i" }}</td>
+                    <td class="small text-muted">{{ pago.registrado_por.username|default:"Sistema" }}</td>
+                    <td class="text-end pe-3">
+                        <a href="{% url 'membresias:comprobante_pago' pago.id %}" class="btn btn-outline-secondary btn-sm" title="Ver Comprobante">
+                            <i class="bi bi-printer"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">No se registran pagos en el sistema.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

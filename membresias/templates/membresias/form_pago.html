@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Pago - GymAccess{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <h4 class="fw-bold text-dark mb-0">Registrar Pago</h4>
+                <a href="{% url 'membresias:lista_pagos' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Volver a Pagos
+                </a>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-danger py-2 small mb-3">
+                    Por favor verifique los datos ingresados.
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">{{ form.membresia.label }}</label>
+                    {{ form.membresia }}
+                    {% if form.membresia.errors %}<div class="text-danger small mt-1">{{ form.membresia.errors }}</div>{% endif %}
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-6">
+                        <label class="form-label small fw-semibold text-secondary">{{ form.monto.label }} ($)</label>
+                        {{ form.monto }}
+                        {% if form.monto.errors %}<div class="text-danger small mt-1">{{ form.monto.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label small fw-semibold text-secondary">{{ form.metodo.label }}</label>
+                        {{ form.metodo }}
+                        {% if form.metodo.errors %}<div class="text-danger small mt-1">{{ form.metodo.errors }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                    <a href="{% url 'membresias:lista_pagos' %}" class="btn btn-secondary btn-sm">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Guardar y Emitir Comprobante
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Historial y Auditoría de Accesos - GymAccess{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold text-dark mb-1">Historial y Auditoría de Accesos</h4>
+        <p class="text-secondary small mb-0">Registro en tiempo real de todos los intentos de acceso por código QR.</p>
+    </div>
+    <a href="{% url 'accesos:validar' %}" class="btn btn-primary btn-sm shadow-sm">
+        <i class="bi bi-qr-code-scan me-1"></i> Ir al Terminal de Validación
+    </a>
+</div>
+
+<!-- Filtros de Auditoría -->
+<div class="card card-custom p-3 mb-4">
+    <form method="get" class="row g-2">
+        <div class="col-md-4">
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Buscar por socio o documento...">
+        </div>
+        <div class="col-md-3">
+            <select name="resultado" class="form-select">
+                <option value="">Todos los Resultados</option>
+                {% for val, label in resultados_choices %}
+                <option value="{{ val }}" {% if resultado_filtro == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="puerta" class="form-select">
+                <option value="">Todas las Puertas</option>
+                <option value="Principal" {% if puerta_filtro == "Principal" %}selected{% endif %}>Puerta Principal</option>
+                <option value="Torniquete 1" {% if puerta_filtro == "Torniquete 1" %}selected{% endif %}>Torniquete 1</option>
+                <option value="Torniquete 2" {% if puerta_filtro == "Torniquete 2" %}selected{% endif %}>Torniquete 2</option>
+                <option value="Área VIP" {% if puerta_filtro == "Área VIP" %}selected{% endif %}>Área VIP</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Filtrar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de Auditoría de Accesos -->
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Fecha y Hora</th>
+                    <th>Socio</th>
+                    <th>Documento</th>
+                    <th>Puerta</th>
+                    <th>Resultado</th>
+                    <th>Validado Por</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acceso in accesos %}
+                <tr>
+                    <td class="ps-3 small text-secondary">{{ acceso.fecha_hora|date:"d/m/Y H:i:s" }}</td>
+                    <td class="fw-medium">
+                        {% if acceso.socio %}
+                            <a href="{% url 'cuentas:detalle_socio' acceso.socio.id %}" class="text-decoration-none text-dark">
+                                {{ acceso.socio.nombre_completo }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted fst-italic">No identificado</span>
+                        {% endif %}
+                    </td>
+                    <td class="font-monospace small">
+                        {{ acceso.socio.documento_identidad|default:"-" }}
+                    </td>
+                    <td><span class="badge bg-light text-secondary border">{{ acceso.puerta }}</span></td>
+                    <td>
+                        {% if "PERMITIDO" in acceso.resultado %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i> {{ acceso.get_resultado_display }}
+                            </span>
+                        {% elif "QR_EXPIRADO" in acceso.resultado %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                <i class="bi bi-clock-history me-1"></i> {{ acceso.get_resultado_display }}
+                            </span>
+                        {% elif "MEMBRESIA_VENCIDA" in acceso.resultado %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <i class="bi bi-x-circle me-1"></i> {{ acceso.get_resultado_display }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <i class="bi bi-shield-x me-1"></i> {{ acceso.get_resultado_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="small text-muted">{{ acceso.validado_por.username|default:"Lector Automático" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">No se registran eventos de acceso con los criterios seleccionados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

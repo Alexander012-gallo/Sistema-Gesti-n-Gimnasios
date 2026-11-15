@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Asignar o Renovar Membresía - GymAccess{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Asignar o Renovar Membresía</h4>
+                    <p class="text-secondary small mb-0">Selecciona el socio y el plan. Se calculará automáticamente la fecha fin y se puede emitir el pago.</p>
+                </div>
+                <a href="{% url 'membresias:lista_membresias' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Volver
+                </a>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                <div class="alert alert-danger py-2 small mb-3">
+                    Por favor revise los campos indicados abajo.
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">{{ form.socio.label }}</label>
+                    {{ form.socio }}
+                    {% if form.socio.errors %}<div class="text-danger small mt-1">{{ form.socio.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">{{ form.plan.label }}</label>
+                    {{ form.plan }}
+                    {% if form.plan.errors %}<div class="text-danger small mt-1">{{ form.plan.errors }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">{{ form.fecha_inicio.label }}</label>
+                    {{ form.fecha_inicio }}
+                    <div class="form-text small">{{ form.fecha_inicio.help_text }}</div>
+                    {% if form.fecha_inicio.errors %}<div class="text-danger small mt-1">{{ form.fecha_inicio.errors }}</div>{% endif %}
+                </div>
+
+                <div class="card bg-light border p-3 my-3">
+                    <div class="form-check form-switch mb-2">
+                        {{ form.registrar_pago }}
+                        <label class="form-check-label fw-semibold small text-dark" for="{{ form.registrar_pago.id_for_label }}">
+                            Generar comprobante de pago inmediatamente
+                        </label>
+                    </div>
+
+                    <div class="row g-2 mt-1">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.metodo_pago.label }}</label>
+                            {{ form.metodo_pago }}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold text-secondary">{{ form.monto.label }}</label>
+                            {{ form.monto }}
+                            <div class="form-text small">{{ form.monto.help_text }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                    <a href="{% url 'membresias:lista_membresias' %}" class="btn btn-secondary btn-sm">Cancelar</a>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold shadow-sm">
+                        <i class="bi bi-check-circle me-1"></i> Confirmar y Asignar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
